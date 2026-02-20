@@ -1,0 +1,41 @@
+@import './base.css';
+
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-weight: normal;
+  display: flex;           /* flex layout for content */
+  flex-direction: column;  /* stack children vertically */
+  align-items: center;     /* horizontal centering */
+  justify-content: flex-start; /* keep content at top; change to 'center' for full vertical centering */
+}
+
+a,
+.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    display: flex;
+    flex-direction: column; /* stack content vertically */
+    align-items: center;    /* horizontal centering */
+  }
+
+  #app {
+    display: flex;           /* keep flex instead of grid */
+    flex-direction: column;  /* vertical stacking */
+    align-items: center;     /* center content horizontally */
+    padding: 0 2rem;
+  }
+}
