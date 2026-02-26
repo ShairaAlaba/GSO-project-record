@@ -1,41 +1,169 @@
 @import './base.css';
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+/* ===============================
+   APP LAYOUT (YOUR SYSTEM)
+================================ */
+
+body {
+  margin: 0;
+  width: 100%;
+}
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
-  display: flex;           /* flex layout for content */
-  flex-direction: column;  /* stack children vertically */
-  align-items: center;     /* horizontal centering */
-  justify-content: flex-start; /* keep content at top; change to 'center' for full vertical centering */
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
-a,
-.green {
+body, #app {
+  overflow-x: hidden;   /* prevent horizontal scroll except in table */
+  overflow-y: auto;     /* allow vertical scroll */
+}
+/* ===============================
+   LINKS
+================================ */
+
+a {
   text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+  color: var(--gold);
+  transition: 0.2s;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+a:hover {
+  opacity: 0.8;
 }
+
+/* ===============================
+   NAVBAR (HER DESIGN)
+================================ */
+
+.topnav {
+  background: var(--dark);
+  color: #fff;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 52px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.topnav .logo {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gold-light);
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ===============================
+   CONTAINER WRAP
+================================ */
+
+.wrap {
+  max-width: 100%;       /* allow full screen width */
+  margin: 28px auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+/* ===============================
+   CARDS
+================================ */
+
+.card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+/* ===============================
+   BUTTON SYSTEM
+================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-gold {
+  background: var(--gold);
+  color: var(--dark);
+}
+
+.btn-dark {
+  background: var(--dark);
+  color: #fff;
+}
+
+.btn-red {
+  background: var(--red);
+  color: #fff;
+}
+
+.btn-green {
+  background: var(--green);
+  color: #fff;
+}
+
+/* ===============================
+   TABLE STYLE
+================================ */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead tr {
+  background: var(--dark);
+  color: #fff;
+}
+
+thead th {
+  padding: 10px;
+  text-align: center;
+  font-size: 11px;
+}
+
+tbody td {
+  padding: 8px 10px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+.overflow-x {
+  overflow-x: auto;       /* enable horizontal scroll */
+  -webkit-overflow-scrolling: touch; /* smooth scrolling on mobile */
+}
+/* ===============================
+   RESPONSIVE
+================================ */
 
 @media (min-width: 1024px) {
-  body {
-    display: flex;
-    flex-direction: column; /* stack content vertically */
-    align-items: center;    /* horizontal centering */
-  }
-
   #app {
-    display: flex;           /* keep flex instead of grid */
-    flex-direction: column;  /* vertical stacking */
-    align-items: center;     /* center content horizontally */
     padding: 0 2rem;
   }
 }
