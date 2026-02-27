@@ -27,8 +27,8 @@
             <input v-model="form.obligationAuth" type="text" placeholder="e.g. OBR No. 2025-001" />
           </div>
           <div class="form-row">
-            <label>Amount Released (₱)</label>
-            <input v-model.number="form.amountReleased" type="number" placeholder="0.00" step="0.01" min="0" />
+            <label>Purchase Request Number</label>
+            <input v-model="form.amountReleased" type="text" placeholder="e.g. PR No. 2025-001" />
           </div>
           <div class="form-row">
             <label>Total Projection Duration (Working Days)</label>
@@ -47,12 +47,12 @@
             <input v-model="form.powNumber" type="text" placeholder="POW No." />
           </div>
           <div class="form-row">
-            <label>Project Category</label>
-            <input v-model="form.projectCategory" type="text" placeholder="e.g. Repair and Maintenance" />
+            <label>RIS No. (Requisition and Issue Slip Number)</label>
+            <input v-model="form.projectCategory" type="text" placeholder="e.g. RIS No. 2025-001" />
           </div>
           <div class="form-row">
-            <label>Revision Number</label>
-            <input v-model="form.revisionNumber" type="text" placeholder="0" />
+            <label>Purchase Order Number</label>
+            <input v-model="form.revisionNumber" type="text" placeholder="e.g. PO No. 2025-001" />
           </div>
           <div class="form-row">
             <label>Date Started</label>
@@ -139,26 +139,6 @@
           <div class="form-row">
             <label>Work Description</label>
             <input v-model="loc.workDescription" type="text" placeholder="e.g. STAINLESS STEEL RAILINGS" />
-          </div>
-          <div class="form-row">
-            <label>Quantity</label>
-            <input v-model.number="loc.quantity" type="number" placeholder="80" step="0.01" min="0" @input="recomputeWt" />
-          </div>
-          <div class="form-row">
-            <label>Unit</label>
-            <input v-model="loc.unit" type="text" placeholder="l.m." />
-          </div>
-          <div class="form-row">
-            <label>Output per Day</label>
-            <input v-model.number="loc.outputPerDay" type="number" placeholder="4" step="0.01" min="0" />
-          </div>
-          <div class="form-row">
-            <label>Duration to Complete (Days)</label>
-            <input v-model.number="loc.duration" type="number" placeholder="20" min="0" />
-          </div>
-          <div class="form-row">
-            <label>Desirable Starting Date</label>
-            <input v-model="loc.startDate" type="date" />
           </div>
         </div>
 

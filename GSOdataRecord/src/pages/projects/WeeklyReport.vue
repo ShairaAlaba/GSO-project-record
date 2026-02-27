@@ -39,12 +39,12 @@
             <tr><td class="pm-label">Appropriation</td><td class="pm-sep">:</td><td class="pm-value">Php {{ fmt(p?.appropriation) }}</td></tr>
             <tr><td class="pm-label">Source of Funds</td><td class="pm-sep">:</td><td class="pm-value">{{ p?.fund || '—' }}</td></tr>
             <tr><td class="pm-label">Issued Obligation Authority</td><td class="pm-sep">:</td><td class="pm-value">{{ p?.obligationAuth || '' }}</td></tr>
-            <tr><td class="pm-label">Amount Released</td><td class="pm-sep">:</td><td class="pm-value">{{ p?.amountReleased ? 'Php ' + fmt(p.amountReleased) : '' }}</td></tr>
+            <tr><td class="pm-label">Purchase Request Number</td><td class="pm-sep">:</td><td class="pm-value">{{ p?.amountReleased || '' }}</td></tr>
             <tr><td class="pm-label">Total Projection Duration</td><td class="pm-sep">:</td><td class="pm-value">{{ p?.duration || '' }} working days</td></tr>
             <tr><td class="pm-label">Desirable Starting Date</td><td class="pm-sep">:</td><td class="pm-value">{{ p?.startDate || 'Upon Approval' }}</td></tr>
           </table>
-          <div class="pow-pow-row"><span class="pm-label">POW Number:</span> {{ p?.powNumber || '' }} &nbsp;&nbsp; <span class="pm-label">Project Category:</span> {{ p?.projectCategory || '' }}</div>
-          <div class="pow-pow-row"><span class="pm-label">Revision Number:</span> {{ p?.revisionNumber || '' }} &nbsp;&nbsp; <span class="pm-label">Date Started:</span> {{ p?.dateStarted || '' }}</div>
+          <div class="pow-pow-row"><span class="pm-label">POW Number:</span> {{ p?.powNumber || '' }} &nbsp;&nbsp; <span class="pm-label">RIS No.:</span> {{ p?.projectCategory || '' }}</div>
+          <div class="pow-pow-row"><span class="pm-label">Purchase Order Number:</span> {{ p?.revisionNumber || '' }} &nbsp;&nbsp; <span class="pm-label">Date Started:</span> {{ p?.dateStarted || '' }}</div>
         </div>
       </div>
 
@@ -55,8 +55,6 @@
             <tr>
               <th class="col-ipow-no">ITEM NO.</th>
               <th class="col-ipow-desc">DESCRIPTION</th>
-              <th class="col-ipow-qty">QUANTITY</th>
-              <th class="col-ipow-unit">UNIT</th>
               <th class="col-ipow-cost">EST. MATERIAL COST</th>
               <th class="col-ipow-cost">EST. LABOR COST</th>
               <th class="col-ipow-cost">EST. PROJECT COST</th>
@@ -71,8 +69,6 @@
                 {{ loc.title || loc.workDescription || `Location ${String.fromCharCode(65+li)}` }}
                 <div class="loc-work-desc" v-if="loc.workDescription">{{ loc.workDescription }}</div>
               </td>
-              <td class="td-mono td-right">{{ loc.quantity || '' }}</td>
-              <td class="td-center">{{ loc.unit || '' }}</td>
               <td class="td-mono td-right">{{ fmt(locMaterialTotal(li)) }}</td>
               <td class="td-mono td-right">{{ fmt(locOriginalLaborTotal(li)) }}</td>
               <td class="td-mono td-right td-bold">{{ fmt(locTotal(li)) }}</td>
@@ -81,7 +77,7 @@
           </tbody>
           <tfoot>
             <tr class="tfoot-row">
-              <td colspan="4" class="tfoot-label">TOTAL</td>
+              <td colspan="2" class="tfoot-label">TOTAL</td>
               <td class="tfoot-value">{{ fmt(grandMaterialTotal) }}</td>
               <td class="tfoot-value">{{ fmt(grandLaborTotal) }}</td>
               <td class="tfoot-value">{{ fmt(grandTotal) }}</td>
@@ -104,17 +100,13 @@
         <div class="loc-title-meta">
           <table class="loc-meta-table">
             <tr><td>Total Item Cost</td><td>: Php</td><td class="td-mono">{{ fmt(locTotal(li)) }}</td></tr>
-            <tr><td>Quantity</td><td>:</td><td>{{ loc.quantity }} {{ loc.unit }}</td></tr>
-            <tr><td>Output per Day</td><td>:</td><td>{{ loc.outputPerDay || '' }}</td></tr>
             <tr><td>Unit Cost</td><td>: Php</td><td class="td-mono">{{ fmt(locUnitCost(li)) }}</td></tr>
-            <tr><td>Duration to Complete</td><td>:</td><td>{{ loc.duration }} working days</td></tr>
-            <tr><td>Desirable Starting Date</td><td>:</td><td>{{ loc.startDate || 'Upon Approval' }}</td></tr>
           </table>
         </div>
         <div class="loc-title-right">
           <div class="loc-pow-row"><span class="pm-label">POW Number:</span> {{ p?.powNumber || '' }}</div>
-          <div class="loc-pow-row"><span class="pm-label">Project Category:</span> {{ p?.projectCategory || '' }}</div>
-          <div class="loc-pow-row"><span class="pm-label">Revision Number:</span> {{ p?.revisionNumber || '' }}</div>
+          <div class="loc-pow-row"><span class="pm-label">RIS No.:</span> {{ p?.projectCategory || '' }}</div>
+          <div class="loc-pow-row"><span class="pm-label">Purchase Order Number:</span> {{ p?.revisionNumber || '' }}</div>
           <div class="loc-pow-row"><span class="pm-label">Date Started:</span> {{ p?.dateStarted || '' }}</div>
           <div class="loc-itemno-box">
             <div class="loc-itemno-label">ITEM NO.</div>
