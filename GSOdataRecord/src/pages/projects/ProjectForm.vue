@@ -512,7 +512,18 @@ function goBack() { router.push('/history') }
 
 function saveProject() {
   if (!form.value.projectName.trim()) { alert('Please enter a project name.'); return }
-  locations.value.forEach((_, li) => { computeLoc(li); computeLocLabor(li); computeProgressRemaining(li) })
+  locations.value.forEach((loc, li) => {
+    computeLoc(li)
+    computeLocLabor(li)
+    computeProgressRemaining(li)
+    // Auto-fill title from first material description if left blank
+    if (!loc.title || !loc.title.trim()) {
+      const firstDesc = loc.materials?.find(m => m.description?.trim())?.description
+      if (firstDesc) loc.title = firstDesc.trim()
+    }
+    // Also keep loc.label in sync so history.vue cat.label works too
+    loc.label = loc.title
+  })
   const project = {
     ...form.value,
     totalAmount: grandTotal.value,
