@@ -5,7 +5,8 @@
 
     <!-- ── Print Header ──────────────────────────────────── -->
     <div class="print-header">
-      <img src="../../assets/head.jpg" class="ph-logo" alt="CSU" onerror="this.style.display='none'" />
+      <img src="../../assets/1.png" class="ph-img ph-left" alt="CSU Header" onerror="this.style.display='none'" />
+      <img src="../../assets/2.png" class="ph-img ph-right" alt="Bagong Pilipinas" onerror="this.style.display='none'" />
     </div>
 
     <!-- Screen header -->
@@ -121,40 +122,45 @@
       <div class="progress-rate-bar">
         <div class="prb-header">
           <span class="prb-title">{{ String.fromCharCode(65+li) }}. {{ loc.title || 'Location ' + String.fromCharCode(65+li) }}</span>
-          <span class="prb-wt-badge">WT {{ locWt(li) }}%</span>
-          <div class="prb-pct-inputs">
-            <label class="prb-lbl">Previous %</label>
-            <input v-model="loc.prevPct" type="text" class="prb-input no-print" placeholder="0" />
-            <span class="prb-print-val print-only">{{ loc.prevPct || '0' }}%</span>
-
-            <label class="prb-lbl">This Date %</label>
-            <input v-model.number="loc.thisDatePct" type="number" class="prb-input no-print" min="0" max="100" step="0.01" />
-            <span class="prb-print-val print-only">{{ (loc.thisDatePct || 0).toFixed(2) }}%</span>
-
-            <label class="prb-lbl remaining-lbl">Remaining</label>
-            <span class="prb-remaining">{{ locRemainingPct(li) }}%</span>
+        
+          <div class="prb-stats">
+            <div class="prb-stat-item">
+              <span class="prb-lbl">Total Qty</span>
+              <span class="prb-stat-val">{{ fmtNum(locQtyTotal(li)) }}</span>
+            </div>
+            <div class="prb-stat-item">
+              <span class="prb-lbl prb-lbl-withdrawn">Withdrawn</span>
+              <span class="prb-stat-val prb-stat-withdrawn">{{ fmtNum(locWithdrawalTotal(li)) }}</span>
+            </div>
+            <div class="prb-stat-item">
+              <span class="prb-lbl prb-lbl-remaining">Remaining</span>
+              <span class="prb-stat-val prb-stat-remaining">{{ fmtNum(locRemainingTotal(li)) }}</span>
+            </div>
+            <div class="prb-stat-item prb-stat-pct-block">
+              <span class="prb-lbl">WT %</span>
+              <span class="prb-stat-pct">{{ locWithdrawalPct(li) }}%</span>
+            </div>
           </div>
         </div>
 
         <div class="prb-track">
-          <div class="prb-segment prb-prev"
-            :style="{ width: clampPct(parseFloat(loc.prevPct) || 0) + '%' }">
-            <span v-if="(parseFloat(loc.prevPct) || 0) >= 6" class="prb-seg-label">{{ (parseFloat(loc.prevPct) || 0).toFixed(1) }}%</span>
-          </div>
-          <div class="prb-segment prb-this"
-            :style="{ width: clampPct(loc.thisDatePct || 0) + '%' }">
-            <span v-if="(loc.thisDatePct || 0) >= 6" class="prb-seg-label">{{ (loc.thisDatePct || 0).toFixed(1) }}%</span>
+          <div class="prb-segment prb-withdrawn"
+            :style="{ width: clampPct(locWithdrawalPctRaw(li)) + '%' }"
+            :title="'Withdrawn: ' + locWithdrawalPct(li) + '%'">
+            <span v-if="locWithdrawalPctRaw(li) >= 8" class="prb-seg-label">{{ locWithdrawalPct(li) }}%</span>
           </div>
           <div class="prb-segment prb-remaining-fill"
-            :style="{ width: clampPct(parseFloat(locRemainingPct(li)) || 0) + '%' }">
+            :style="{ width: clampPct(100 - locWithdrawalPctRaw(li)) + '%' }">
+            <span v-if="(100 - locWithdrawalPctRaw(li)) >= 8" class="prb-seg-label prb-seg-label-rem">{{ locWithdrawalRemPct(li) }}%</span>
           </div>
         </div>
 
         <div class="prb-legend">
-          <span class="legend-dot dot-prev"></span><span class="legend-text">Previous: {{ (parseFloat(loc.prevPct) || 0).toFixed(2) }}%</span>
-          <span class="legend-dot dot-this"></span><span class="legend-text">This Date: {{ (loc.thisDatePct || 0).toFixed(2) }}%</span>
-          <span class="legend-dot dot-rem"></span><span class="legend-text">Remaining: {{ locRemainingPct(li) }}%</span>
-          <span class="legend-total">Total Accomplished: {{ totalAccomplished(li) }}%</span>
+          <span class="legend-dot dot-withdrawn"></span>
+          <span class="legend-text">Withdrawn: {{ fmtNum(locWithdrawalTotal(li)) }} units ({{ locWithdrawalPct(li) }}%)</span>
+          <span class="legend-dot dot-rem"></span>
+          <span class="legend-text">Remaining: {{ fmtNum(locRemainingTotal(li)) }} units ({{ locWithdrawalRemPct(li) }}%)</span>
+          <span class="legend-total">{{ locWithdrawalPct(li) }}% of materials used</span>
         </div>
       </div>
 
@@ -270,11 +276,12 @@
           <thead>
             <tr>
               <th class="col-mp-desc">ITEM DESCRIPTION</th>
-              <th class="col-mp-wt">WT%</th>
-              <th class="col-mp-activity">THIS DATE ACTIVITY</th>
-              <th class="col-mp-pct">% PREV</th>
-              <th class="col-mp-pct">THIS DATE</th>
-              <th class="col-mp-pct">REMAINING %</th>
+              <th class="col-mp-itemno">ITEM NO.</th>
+            
+              <th class="col-mp-pct">TOTAL QTY</th>
+              <th class="col-mp-pct">WITHDRAWN</th>
+              <th class="col-mp-pct">REMAINING</th>
+              <th class="col-mp-pct">WT %</th>
               <th class="col-mp-problems">PROBLEMS ENCOUNTERED</th>
             </tr>
           </thead>
@@ -284,21 +291,12 @@
               <td class="td-left td-bold">
                 {{ String.fromCharCode(65+li) }}. {{ loc.title || `Location ${String.fromCharCode(65+li)}` }}
               </td>
-              <td class="td-mono td-center">{{ locWt(li) }}%</td>
-              <td>
-                <input v-model="loc.activity" type="text" class="item-input no-print" placeholder="e.g. Installation works" />
-                <span class="print-only">{{ loc.activity || '' }}</span>
-              </td>
-              <td class="td-mono td-center">
-                <input v-model="loc.prevPct" type="text" class="item-input text-center no-print" placeholder="N/A" />
-                <span class="print-only td-mono">{{ loc.prevPct || 'N/A' }}</span>
-              </td>
-              <td class="td-mono td-center">
-                <input v-model.number="loc.thisDatePct" type="number" class="item-input text-center no-print"
-                  min="0" max="100" step="0.01" placeholder="0.00" />
-                <span class="print-only td-mono">{{ (loc.thisDatePct || 0).toFixed(2) }}%</span>
-              </td>
-              <td class="td-mono td-center td-remaining">{{ locRemainingPct(li) }}%</td>
+              <td class="td-mono td-center">{{ loc.itemNo || '—' }}</td>
+
+              <td class="td-mono td-center">{{ fmtNum(locQtyTotal(li)) }}</td>
+              <td class="td-mono td-center td-mp-withdrawn">{{ fmtNum(locWithdrawalTotal(li)) }}</td>
+              <td class="td-mono td-center td-mp-remaining">{{ fmtNum(locRemainingTotal(li)) }}</td>
+              <td class="td-mono td-center td-mp-pct">{{ locWithdrawalPct(li) }}%</td>
               <td>
                 <select v-model="loc.problems" class="item-input no-print">
                   <option>No Problem Encountered</option>
@@ -314,11 +312,11 @@
           <tfoot>
             <tr class="tfoot-row">
               <td class="tfoot-label" style="padding-left:10px">Total:</td>
-              <td class="tfoot-value">100.00%</td>
               <td></td>
-              <td class="tfoot-value">{{ totalPrevPct }}%</td>
-              <td class="tfoot-value">{{ totalThisDatePct }}%</td>
-              <td class="tfoot-value td-remaining">{{ totalRemainingPct }}%</td>
+              <td class="tfoot-value">{{ fmtNum(grandQtyTotal) }}</td>
+              <td class="tfoot-value tfoot-withdrawal">{{ fmtNum(grandWithdrawalTotal) }}</td>
+              <td class="tfoot-value tfoot-remaining-val">{{ fmtNum(grandRemainingTotal) }}</td>
+              <td class="tfoot-value">{{ grandWithdrawalPct }}%</td>
               <td></td>
             </tr>
           </tfoot>
@@ -332,8 +330,8 @@
     <div class="actions-bar no-print">
       <button class="btn btn-dark" @click="$router.push('/history')">← Back</button>
       <div class="spacer"></div>
-      <button class="btn btn-gold" @click="saveProgress">💾 Save Progress</button>
-      <button class="btn btn-green" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-gold" @click="saveProgress"> Save Progress</button>
+      <button class="btn btn-green" onclick="window.print()">Print</button>
     </div>
 
   </div>
@@ -416,23 +414,29 @@ function locWt(li) {
   if (!gt) return '0.00'
   return ((locTotal(li) / gt) * 100).toFixed(2)
 }
-function locRemainingPct(li) {
-  const loc = locations.value[li]
-  if (!loc) return '0.00'
-  const wt = parseFloat(locWt(li))
-  const pr = parseFloat(loc.prevPct) || 0
-  const td = Number(loc.thisDatePct) || 0
-  return Math.max(0, wt - pr - td).toFixed(2)
+
+// ── Withdrawal-based progress (mirrors ProjectForm exactly) ──
+function locWithdrawalPctRaw(li) {
+  const qty = locQtyTotal(li)
+  if (!qty) return 0
+  return Math.min(100, (locWithdrawalTotal(li) / qty) * 100)
 }
-function totalAccomplished(li) {
-  const loc = locations.value[li]
-  if (!loc) return '0.00'
-  return ((parseFloat(loc.prevPct) || 0) + (Number(loc.thisDatePct) || 0)).toFixed(2)
+function locWithdrawalPct(li) {
+  return locWithdrawalPctRaw(li).toFixed(2)
+}
+function locWithdrawalRemPct(li) {
+  return Math.max(0, 100 - locWithdrawalPctRaw(li)).toFixed(2)
 }
 
-const totalPrevPct      = computed(() => locations.value.reduce((s, l) => s + (parseFloat(l.prevPct) || 0), 0).toFixed(2))
-const totalThisDatePct  = computed(() => locations.value.reduce((s, l) => s + (Number(l.thisDatePct) || 0), 0).toFixed(2))
-const totalRemainingPct = computed(() => locations.value.reduce((s, _, li) => s + parseFloat(locRemainingPct(li)), 0).toFixed(2))
+// Grand totals for Material Progress tfoot
+const grandQtyTotal        = computed(() => locations.value.reduce((s, _, li) => s + locQtyTotal(li), 0))
+const grandWithdrawalTotal = computed(() => locations.value.reduce((s, _, li) => s + locWithdrawalTotal(li), 0))
+const grandRemainingTotal  = computed(() => locations.value.reduce((s, _, li) => s + locRemainingTotal(li), 0))
+const grandWithdrawalPct   = computed(() => {
+  const qty = grandQtyTotal.value
+  if (!qty) return '0.00'
+  return Math.min(100, (grandWithdrawalTotal.value / qty) * 100).toFixed(2)
+})
 
 function saveProgress() {
   const project = p.value
@@ -461,7 +465,9 @@ function saveProgress() {
 
 /* ── Print Header ─────────────────────────────────────── */
 .print-header { display: none; }
-.ph-logo { width: 100%; height: auto; display: block; }
+.ph-img   { display: block; height: auto; object-fit: contain; }
+.ph-left  { max-height: 72px; width: auto; }
+.ph-right { max-height: 72px; width: auto; margin-left: -150px; }
 
 /* ── Screen header ────────────────────────────────────── */
 .screen-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
@@ -532,13 +538,16 @@ function saveProgress() {
   font-family: 'IBM Plex Mono', monospace; font-weight: 700; white-space: nowrap;
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
-.prb-pct-inputs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.prb-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.65); white-space: nowrap; }
-.remaining-lbl { color: #ff8a80 !important; }
-.prb-input { width: 56px; background: rgba(255,255,255,0.1); border: 1px solid rgba(240,196,25,0.35); border-radius: 4px; padding: 3px 5px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: #f0c419; text-align: center; outline: none; }
-.prb-input:focus { border-color: #f0c419; }
-.prb-print-val { font-size: 11px; font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: #f0c419; }
-.prb-remaining { font-size: 11px; font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: #ff8a80; min-width: 40px; }
+.prb-stats { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.prb-stat-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.prb-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.5); white-space: nowrap; }
+.prb-lbl-withdrawn { color: #ffd180 !important; }
+.prb-lbl-remaining { color: #ff8a80 !important; }
+.prb-stat-val { font-size: 13px; font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: #fff; }
+.prb-stat-withdrawn { color: #f0c419 !important; }
+.prb-stat-remaining { color: #ff8a80 !important; }
+.prb-stat-pct-block { border-left: 1px solid rgba(255,255,255,0.15); padding-left: 16px; }
+.prb-stat-pct { font-size: 18px; font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: #f0c419; }
 
 .prb-track {
   height: 18px; background: rgba(255,255,255,0.08); border-radius: 9px;
@@ -551,19 +560,17 @@ function saveProgress() {
   min-width: 0; overflow: hidden; transition: width 0.3s ease;
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
-.prb-prev           { background: #546e8a; }
-.prb-this           { background: #f0c419; }
+.prb-withdrawn      { background: #f0c419; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .prb-remaining-fill { background: rgba(255,255,255,0.1); }
-.prb-seg-label { font-size: 9px; font-weight: 700; color: #fff; white-space: nowrap; padding: 0 3px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
-.prb-this .prb-seg-label { color: #1a1a2e; }
+.prb-seg-label { font-size: 9px; font-weight: 700; color: #1a1a2e; white-space: nowrap; padding: 0 3px; }
+.prb-seg-label-rem { color: rgba(255,255,255,0.6) !important; }
 
 .prb-legend {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 10px;
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
 .legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.dot-prev { background: #546e8a; }
-.dot-this { background: #f0c419; }
+.dot-withdrawn { background: #f0c419; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .dot-rem  { background: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.4); }
 .legend-text { color: rgba(255,255,255,0.7); margin-left: -8px; }
 .legend-total {
@@ -631,10 +638,13 @@ function saveProgress() {
 .mp-table thead th { background: #f0c419 !important; color: #1a1a2e !important; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 6px; border: 1.5px solid #d4aa10; text-align: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .mp-table thead th.col-mp-desc { text-align: left; }
 .col-mp-desc     { min-width: 160px; }
+.col-mp-itemno   { width: 65px; }
 .col-mp-wt       { width: 60px; }
-.col-mp-activity { min-width: 150px; }
 .col-mp-pct      { width: 72px; }
 .col-mp-problems { min-width: 130px; }
+.td-mp-withdrawn { color: #e65100 !important; font-weight: 700; }
+.td-mp-remaining { color: #2e7d32 !important; font-weight: 700; }
+.td-mp-pct       { color: #c0392b !important; font-weight: 700; }
 
 /* ── Signature block ──────────────────────────────────── */
 .signature-block {
@@ -679,13 +689,27 @@ function saveProgress() {
 @media print {
   @page {
     size: Letter portrait;
-    margin: 8mm 8mm 8mm 8mm;
+    margin: 16mm 14mm 16mm 14mm;
   }
 
   /* Show / hide */
   .no-print   { display: none !important; }
   .print-only { display: inline !important; }
-  .print-header { display: block !important; margin-bottom: 8pt; }
+  .print-header {
+    display: flex !important;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 8pt;
+    padding-bottom: 5pt;
+    border-bottom: 1pt solid #aaa;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .ph-img   { display: block !important; object-fit: contain; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .ph-left  { max-height: 52pt; width: auto; }
+  .ph-right { max-height: 38pt; width: auto; }
 
   /* Layout — no wasted space, content flows naturally */
   .wrap {
@@ -749,7 +773,7 @@ function saveProgress() {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  .prb-prev, .prb-this, .prb-remaining-fill {
+  .prb-withdrawn, .prb-remaining-fill {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -757,8 +781,8 @@ function saveProgress() {
   .prb-title     { font-size: 7pt; color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .prb-wt-badge  { font-size: 7pt; padding: 1pt 5pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .prb-lbl       { font-size: 6pt; }
-  .prb-remaining { font-size: 7pt; }
-  .prb-print-val { font-size: 7pt; }
+  .prb-stat-val  { font-size: 8pt; }
+  .prb-stat-pct  { font-size: 11pt; }
   .prb-legend    { font-size: 6pt; }
   .legend-dot    { width: 7pt; height: 7pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .legend-total  { font-size: 7pt; padding: 1pt 5pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }

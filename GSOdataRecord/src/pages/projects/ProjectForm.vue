@@ -95,37 +95,44 @@
       <div class="progress-rate-bar">
         <div class="prb-header">
           <span class="prb-title">{{ String.fromCharCode(65 + li) }}. {{ loc.title || 'Location ' + String.fromCharCode(65 + li) }}</span>
-          <span class="prb-wt-badge">WT {{ locWt(li) }}%</span>
-          <div class="prb-pct-inputs">
-            <label class="prb-lbl">Previous %</label>
-            <input v-model="loc.prevPct" type="text" class="prb-input" placeholder="0" @input="computeProgressRemaining(li)" />
-            <label class="prb-lbl">This Date %</label>
-            <input v-model.number="loc.thisDatePct" type="number" class="prb-input" min="0" max="100" step="0.01" @input="computeProgressRemaining(li)" />
-            <label class="prb-lbl remaining-lbl">Remaining</label>
-            <span class="prb-remaining">{{ loc.remainingPct || '0.00' }}%</span>
+
+          <div class="prb-stats">
+            <div class="prb-stat-item">
+              <span class="prb-lbl">Total Qty</span>
+              <span class="prb-stat-val">{{ fmtNum(locQtyTotal(li)) }}</span>
+            </div>
+            <div class="prb-stat-item">
+              <span class="prb-lbl prb-lbl-withdrawn">Withdrawn</span>
+              <span class="prb-stat-val prb-stat-withdrawn">{{ fmtNum(locWithdrawalTotal(li)) }}</span>
+            </div>
+            <div class="prb-stat-item">
+              <span class="prb-lbl prb-lbl-remaining">Remaining</span>
+              <span class="prb-stat-val prb-stat-remaining">{{ fmtNum(locRemainingTotal(li)) }}</span>
+            </div>
+            <div class="prb-stat-item prb-stat-pct-block">
+              <span class="prb-lbl">WT %</span>
+              <span class="prb-stat-pct">{{ locWithdrawalPct(li) }}%</span>
+            </div>
           </div>
         </div>
-        <!-- Visual stacked bar: prev (grey) + this date (gold) + remaining (light) -->
+        <!-- Bar driven by withdrawal ÷ total quantity -->
         <div class="prb-track">
-          <div class="prb-segment prb-prev"
-            :style="{ width: clampPct(parseFloat(loc.prevPct) || 0) + '%' }"
-            :title="'Previous: ' + (parseFloat(loc.prevPct) || 0) + '%'">
-            <span v-if="(parseFloat(loc.prevPct) || 0) >= 6" class="prb-seg-label">{{ (parseFloat(loc.prevPct) || 0).toFixed(1) }}%</span>
-          </div>
-          <div class="prb-segment prb-this"
-            :style="{ width: clampPct(loc.thisDatePct || 0) + '%' }"
-            :title="'This Date: ' + (loc.thisDatePct || 0) + '%'">
-            <span v-if="(loc.thisDatePct || 0) >= 6" class="prb-seg-label">{{ (loc.thisDatePct || 0).toFixed(1) }}%</span>
+          <div class="prb-segment prb-withdrawn"
+            :style="{ width: clampPct(locWithdrawalPctRaw(li)) + '%' }"
+            :title="'Withdrawn: ' + locWithdrawalPct(li) + '%'">
+            <span v-if="locWithdrawalPctRaw(li) >= 8" class="prb-seg-label">{{ locWithdrawalPct(li) }}%</span>
           </div>
           <div class="prb-segment prb-remaining-fill"
-            :style="{ width: clampPct(parseFloat(loc.remainingPct) || 0) + '%' }">
+            :style="{ width: clampPct(100 - locWithdrawalPctRaw(li)) + '%' }">
+            <span v-if="(100 - locWithdrawalPctRaw(li)) >= 8" class="prb-seg-label prb-seg-label-rem">{{ locRemainingPct(li) }}%</span>
           </div>
         </div>
         <div class="prb-legend">
-          <span class="legend-dot dot-prev"></span><span class="legend-text">Previous: {{ (parseFloat(loc.prevPct) || 0).toFixed(2) }}%</span>
-          <span class="legend-dot dot-this"></span><span class="legend-text">This Date: {{ (loc.thisDatePct || 0).toFixed(2) }}%</span>
-          <span class="legend-dot dot-rem"></span><span class="legend-text">Remaining: {{ loc.remainingPct || '0.00' }}%</span>
-          <span class="legend-total">Total Accomplished: {{ totalAccomplished(li) }}%</span>
+          <span class="legend-dot dot-withdrawn"></span>
+          <span class="legend-text">Withdrawn: {{ fmtNum(locWithdrawalTotal(li)) }} units ({{ locWithdrawalPct(li) }}%)</span>
+          <span class="legend-dot dot-rem"></span>
+          <span class="legend-text">Remaining: {{ fmtNum(locRemainingTotal(li)) }} units ({{ locRemainingPct(li) }}%)</span>
+          <span class="legend-total">{{ locWithdrawalPct(li) }}% of materials used</span>
         </div>
       </div>
 
@@ -229,6 +236,7 @@
                 <td>
                   <select v-model="l.type" class="item-input" @change="computeLocLabor(li)">
                     <option>SKILLED WORKER</option>
+                    <option>NON-SKILLED</option>
                     <option>LABORER</option>
                     <option>FOREMAN</option>
                     <option>ENGINEER</option>
@@ -284,27 +292,21 @@
             <table class="mat-table progress-table">
               <thead>
                 <tr>
-                  <th class="col-prog-wt">WT%</th>
-                  <th class="col-prog-activity">This Date Activity</th>
-                  <th class="col-prog-pct">% Prev</th>
-                  <th class="col-prog-pct">This Date %</th>
-                  <th class="col-prog-pct">Remaining %</th>
+                  <th class="col-prog-itemno">Item No.</th>
+                  <th class="col-prog-pct">Total Qty</th>
+                  <th class="col-prog-pct">Withdrawn</th>
+                  <th class="col-prog-pct">Remaining</th>
+                  <th class="col-prog-pct">WT %</th>
                   <th class="col-prog-prob">Problems Encountered</th>
                 </tr>
               </thead>
               <tbody>
                 <tr class="row-even">
-                  <td class="td-center">
-                    <span class="wt-badge">{{ locWt(li) }}%</span>
-                  </td>
-                  <td><input v-model="loc.activity" type="text" class="item-input" placeholder="e.g. Installation of railings" /></td>
-                  <td><input v-model="loc.prevPct" type="text" class="item-input text-center" placeholder="N/A" @input="computeProgressRemaining(li)" /></td>
-                  <td>
-                    <input v-model.number="loc.thisDatePct" type="number"
-                      class="item-input text-center" min="0" max="100" step="0.01"
-                      @input="computeProgressRemaining(li)" />
-                  </td>
-                  <td class="td-center td-remaining-pct">{{ loc.remainingPct || '0.00' }}%</td>
+                  <td class="td-center td-mono td-itemno">{{ loc.itemNo || '—' }}</td>
+                  <td class="td-center td-mono">{{ fmtNum(locQtyTotal(li)) }}</td>
+                  <td class="td-center td-mono td-withdrawn">{{ fmtNum(locWithdrawalTotal(li)) }}</td>
+                  <td class="td-center td-mono td-remaining-qty">{{ fmtNum(locRemainingTotal(li)) }}</td>
+                  <td class="td-center td-remaining-pct">{{ locWithdrawalPct(li) }}%</td>
                   <td>
                     <select v-model="loc.problems" class="item-input">
                       <option>No Problem Encountered</option>
@@ -352,7 +354,8 @@
     <div class="actions-bar">
       <button class="btn btn-dark" @click="goBack">Cancel</button>
       <div class="spacer"></div>
-      <button class="btn btn-gold" @click="saveProject">💾 Save Project</button>
+      <button class="btn btn-red" @click="clearDraft">Clear</button>
+      <button class="btn btn-gold" @click="saveProject">Save Project</button>
     </div>
 
   </div>
@@ -360,7 +363,7 @@
 
 <script setup>
 import AppNavbar from '../../components/AppNavbar.vue'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useProjectStore } from '../../stores/projectStore'
 
@@ -409,8 +412,7 @@ function makeLocation() {
     duration: 0, startDate: '',
     materials: [makeMaterial()],
     laborRows: [makeLaborRow()],
-    activity: '', prevPct: '0', thisDatePct: 0, remainingPct: '0.00',
-    problems: 'No Problem Encountered',
+    activity: '', problems: 'No Problem Encountered',
   }
 }
 
@@ -433,7 +435,6 @@ function computeLoc(li) {
   loc.materials.forEach(m => {
     m.cost = (m.quantity || 0) * (m.price || 0)
   })
-  recomputeWt()
 }
 function computeLocLabor(li) {
   const loc = locations.value[li]
@@ -441,7 +442,6 @@ function computeLocLabor(li) {
     l.originalCost = (l.manpower || 1) * (l.days || 0) * (l.rate || 0)
     l.laborCost    = (l.manpower || 1) * (l.daysWorked || 0) * (l.rate || 0)
   })
-  recomputeWt()
 }
 
 // Material quantity totals
@@ -484,28 +484,68 @@ function locWt(li) {
   if (!gt) return '0.00'
   return ((locTotal(li) / gt) * 100).toFixed(2)
 }
-function totalAccomplished(li) {
-  const loc = locations.value[li]
-  if (!loc) return '0.00'
-  return ((parseFloat(loc.prevPct) || 0) + (Number(loc.thisDatePct) || 0)).toFixed(2)
+function locWithdrawalPctRaw(li) {
+  const qty = locQtyTotal(li)
+  if (!qty) return 0
+  return Math.min(100, (locWithdrawalTotal(li) / qty) * 100)
 }
-function computeProgressRemaining(li) {
-  const loc = locations.value[li]
-  if (!loc) return
-  const wt = parseFloat(locWt(li)) || 0
-  const td = Number(loc.thisDatePct) || 0
-  const pr = parseFloat(loc.prevPct) || 0
-  loc.remainingPct = Math.max(0, wt - pr - td).toFixed(2)
+function locWithdrawalPct(li) {
+  return locWithdrawalPctRaw(li).toFixed(2)
 }
-function recomputeWt() { locations.value.forEach((_, li) => computeProgressRemaining(li)) }
+function locRemainingPct(li) {
+  return Math.max(0, 100 - locWithdrawalPctRaw(li)).toFixed(2)
+}
 
 // ── Mutators ──────────────────────────────────────────────
 function addLocation()        { locations.value.push(makeLocation()) }
-function removeLocation(li)   { if (locations.value.length > 1) { locations.value.splice(li, 1); recomputeWt() } }
+function removeLocation(li)   { if (locations.value.length > 1) locations.value.splice(li, 1) }
 function addMaterial(li)      { locations.value[li].materials.push(makeMaterial()) }
 function removeMaterial(li,mi){ locations.value[li].materials.splice(mi, 1); computeLoc(li) }
 function addLabor(li)         { locations.value[li].laborRows.push(makeLaborRow()) }
 function removeLabor(li,li2)  { locations.value[li].laborRows.splice(li2, 1); computeLocLabor(li) }
+
+// ── Draft Persistence ─────────────────────────────────────
+const DRAFT_KEY = computed(() =>
+  resolvedEditIndex.value >= 0
+    ? `cpr_draft_edit_${resolvedEditIndex.value}`
+    : 'cpr_draft_new'
+)
+
+function saveDraft() {
+  try {
+    localStorage.setItem(DRAFT_KEY.value, JSON.stringify({
+      form: form.value,
+      locations: locations.value,
+    }))
+  } catch (e) { /* ignore storage errors */ }
+}
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY.value)
+    if (!raw) return false
+    const draft = JSON.parse(raw)
+    if (draft.form) form.value = { ...form.value, ...draft.form }
+    if (draft.locations && draft.locations.length > 0) {
+      locations.value = draft.locations.map(loc => ({ ...makeLocation(), ...loc,
+        materials: (loc.materials || []).map(m => ({ ...makeMaterial(), ...m })),
+        laborRows: (loc.laborRows || []).map(l => ({ ...makeLaborRow(), ...l })),
+      }))
+    }
+    return true
+  } catch (e) { return false }
+}
+
+function clearDraft() {
+  if (!confirm('Clear all entered data? This cannot be undone.')) return
+  localStorage.removeItem(DRAFT_KEY.value)
+  form.value = {
+    projectName: '', fund: '', appropriation: 0, obligationAuth: '', amountReleased: 0,
+    duration: '', startDate: '', dueDate: '', powNumber: '', projectCategory: '',
+    revisionNumber: '', dateStarted: '', status: 'ON-GOING',
+  }
+  locations.value = [makeLocation()]
+}
 
 // ── Save / Nav ────────────────────────────────────────────
 function goBack() { router.push('/history') }
@@ -515,13 +555,11 @@ function saveProject() {
   locations.value.forEach((loc, li) => {
     computeLoc(li)
     computeLocLabor(li)
-    computeProgressRemaining(li)
     // Auto-fill title from first material description if left blank
     if (!loc.title || !loc.title.trim()) {
       const firstDesc = loc.materials?.find(m => m.description?.trim())?.description
       if (firstDesc) loc.title = firstDesc.trim()
     }
-    // Also keep loc.label in sync so history.vue cat.label works too
     loc.label = loc.title
   })
   const project = {
@@ -538,6 +576,7 @@ function saveProject() {
     store.addProject(project)
   }
   store.saveToStorage()
+  localStorage.removeItem(DRAFT_KEY.value)
   emit('saved')
   router.push('/history')
 }
@@ -566,13 +605,18 @@ onMounted(() => {
         ? JSON.parse(JSON.stringify(src)).map(loc => ({
             ...makeLocation(), ...loc,
             materials: (loc.materials || []).map(m => ({ ...makeMaterial(), ...m })),
+            laborRows: (loc.laborRows || []).map(l => ({ ...makeLaborRow(), ...l })),
           }))
         : [makeLocation()]
+      loadDraft()
     }
   } else {
     locations.value = [makeLocation()]
+    loadDraft()
   }
-  recomputeWt()
+
+  // Auto-save draft whenever form or locations change
+  watch([form, locations], () => { saveDraft() }, { deep: true })
 })
 </script>
 
@@ -619,129 +663,31 @@ onMounted(() => {
   padding: 12px 16px 10px;
   border-bottom: 3px solid #f0c419;
 }
-.prb-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-.prb-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: #fff;
-  flex: 1;
-  min-width: 160px;
-}
-.prb-wt-badge {
-  background: rgba(240,196,25,0.18);
-  border: 1px solid rgba(240,196,25,0.5);
-  color: #f0c419;
-  border-radius: 4px;
-  padding: 2px 10px;
-  font-size: 11px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.prb-pct-inputs {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.prb-lbl {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: rgba(255,255,255,0.55);
-  white-space: nowrap;
-}
-.remaining-lbl { color: #ff8a80 !important; }
-.prb-input {
-  width: 60px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(240,196,25,0.35);
-  border-radius: 4px;
-  padding: 4px 6px;
-  font-size: 12px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-weight: 700;
-  color: #f0c419;
-  text-align: center;
-  outline: none;
-}
-.prb-input:focus { border-color: #f0c419; background: rgba(255,255,255,0.15); }
-.prb-remaining {
-  font-size: 12px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-weight: 700;
-  color: #ff8a80;
-  min-width: 44px;
-}
-
-/* Stacked track */
-.prb-track {
-  height: 22px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 11px;
-  overflow: hidden;
-  display: flex;
-  margin-bottom: 7px;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-.prb-segment {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: width 0.4s ease;
-  min-width: 0;
-  overflow: hidden;
-}
-.prb-prev         { background: #546e8a; }
-.prb-this         { background: #f0c419; }
-.prb-remaining-fill { background: rgba(255,255,255,0.12); }
-.prb-seg-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: #fff;
-  white-space: nowrap;
-  padding: 0 4px;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-}
-.prb-this .prb-seg-label { color: #1a1a2e; }
-
-/* Legend */
-.prb-legend {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  font-size: 11px;
-}
-.legend-dot {
-  display: inline-block;
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.dot-prev { background: #546e8a; }
-.dot-this { background: #f0c419; }
-.dot-rem  { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); }
-.legend-text { color: rgba(255,255,255,0.7); margin-left: -10px; }
-.legend-total {
-  margin-left: auto;
-  font-family: 'IBM Plex Mono', monospace;
-  font-weight: 700;
-  color: #f0c419;
-  font-size: 12px;
-  background: rgba(240,196,25,0.12);
-  border: 1px solid rgba(240,196,25,0.3);
-  border-radius: 4px;
-  padding: 2px 10px;
-}
+.prb-header { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+.prb-title { font-size:13px; font-weight:700; color:#fff; flex:1; min-width:160px; }
+.prb-wt-badge { background:rgba(240,196,25,0.18); border:1px solid rgba(240,196,25,0.5); color:#f0c419; border-radius:4px; padding:2px 10px; font-size:11px; font-family:'IBM Plex Mono',monospace; font-weight:700; white-space:nowrap; }
+.prb-stats { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.prb-stat-item { display:flex; flex-direction:column; align-items:center; gap:2px; }
+.prb-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:rgba(255,255,255,0.5); white-space:nowrap; }
+.prb-lbl-withdrawn { color:#ffd180 !important; }
+.prb-lbl-remaining { color:#ff8a80 !important; }
+.prb-stat-val { font-size:14px; font-family:'IBM Plex Mono',monospace; font-weight:700; color:#fff; }
+.prb-stat-withdrawn { color:#f0c419 !important; }
+.prb-stat-remaining { color:#ff8a80 !important; }
+.prb-stat-pct-block { border-left:1px solid rgba(255,255,255,0.15); padding-left:18px; }
+.prb-stat-pct { font-size:20px; font-family:'IBM Plex Mono',monospace; font-weight:700; color:#f0c419; }
+.prb-track { height:22px; background:rgba(255,255,255,0.08); border-radius:11px; overflow:hidden; display:flex; margin-bottom:7px; border:1px solid rgba(255,255,255,0.1); }
+.prb-segment { height:100%; display:flex; align-items:center; justify-content:center; transition:width 0.4s ease; min-width:0; overflow:hidden; }
+.prb-withdrawn      { background:#f0c419; }
+.prb-remaining-fill { background:rgba(255,255,255,0.10); }
+.prb-seg-label { font-size:10px; font-weight:700; color:#1a1a2e; white-space:nowrap; padding:0 4px; }
+.prb-seg-label-rem { color:rgba(255,255,255,0.55) !important; }
+.prb-legend { display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-size:11px; }
+.legend-dot { display:inline-block; width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.dot-withdrawn { background:#f0c419; }
+.dot-rem { background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); }
+.legend-text { color:rgba(255,255,255,0.7); margin-left:-10px; }
+.legend-total { margin-left:auto; font-family:'IBM Plex Mono',monospace; font-weight:700; color:#f0c419; font-size:12px; background:rgba(240,196,25,0.12); border:1px solid rgba(240,196,25,0.3); border-radius:4px; padding:2px 10px; }
 
 /* ── Body / Tables ────────────────────────────────────── */
 .loc-body { padding:16px; }
@@ -750,7 +696,7 @@ onMounted(() => {
 .mat-table { width:100%; border-collapse:collapse; font-size:12px; min-width:720px; }
 .mat-table thead th { background:#f0c419; color:#1a1a2e; font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; padding:7px 6px; border:1px solid #d4aa10; text-align:center; white-space:nowrap; }
 .mat-table thead th.col-desc, .mat-table thead th.col-ltype, .mat-table thead th.col-lname { text-align:left; }
-.mat-table thead th.col-remaining { background: #e8f5e9 !important; color: #0e390d !important; border-color: #b2dfb2 !important; }
+.mat-table thead th.col-remaining { background:#e8f5e9 !important; color:#0e390d !important; border-color:#b2dfb2 !important; }
 .mat-table tbody td { padding:5px 6px; border:1px solid #e8eaed; vertical-align:middle; }
 .row-even td { background:#fff; }
 .row-odd td  { background:#f9f9f9; }
@@ -758,8 +704,8 @@ onMounted(() => {
 .tfoot-row td { background:#1a1a2e; color:#fff; font-weight:700; font-size:11px; padding:6px 8px; border:1px solid #333; }
 .tfoot-label { text-align:left !important; padding-left:10px !important; }
 .tfoot-value { text-align:right !important; font-family:'IBM Plex Mono',monospace; }
-.tfoot-withdrawal { color: #ffcc80 !important; }
-.tfoot-remaining-val { color: #a5d6a7 !important; }
+.tfoot-withdrawal { color:#ffcc80 !important; }
+.tfoot-remaining-val { color:#a5d6a7 !important; }
 
 /* Column widths */
 .col-desc  { min-width:200px; }
@@ -775,20 +721,10 @@ onMounted(() => {
 
 /* Remaining cell */
 .cell-remaining { text-align:center !important; }
-.remaining-badge {
-  display: inline-block;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 4px;
-  padding: 2px 8px;
-  background: #e8f5e9;
-  color: #2e7d32;
-  border: 1px solid #c8e6c9;
-}
-.badge-low   { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
-.badge-empty { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
-.badge-ok    { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+.remaining-badge { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; border-radius:4px; padding:2px 8px; background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; }
+.badge-low   { background:#fff3e0; color:#e65100; border-color:#ffcc80; }
+.badge-empty { background:#ffebee; color:#c62828; border-color:#ef9a9a; }
+.badge-ok    { background:#e8f5e9; color:#2e7d32; border-color:#c8e6c9; }
 
 /* Inputs */
 .item-input { width:100%; border:1px solid #dde0e8; border-radius:3px; padding:4px 5px; font-size:11px; font-family:inherit; background:#fff; color:#1a1a2e; outline:none; }
@@ -808,11 +744,14 @@ onMounted(() => {
 .progress-tracking-section { border:1.5px solid #f0c419; border-radius:6px; overflow:hidden; }
 .progress-tracking-label { background:#fff8dc; border-bottom:1.5px solid #f0c419; padding:6px 12px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#856404; }
 .progress-table { min-width:600px !important; }
-.col-prog-wt       { width:70px; }
-.col-prog-activity { min-width:180px; }
+.col-prog-itemno   { width:70px; }
 .col-prog-pct      { width:85px; }
 .col-prog-prob     { min-width:170px; }
+.td-itemno { font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; color:#1a1a2e; }
 .td-center { text-align:center; }
+.td-mono   { font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.td-withdrawn     { color:#e65100 !important; font-weight:700; }
+.td-remaining-qty { color:#2e7d32 !important; font-weight:700; }
 .td-remaining-pct { font-family:'IBM Plex Mono',monospace; font-weight:700; color:#c0392b; font-size:11px; }
 .wt-badge { display:inline-block; background:#1a1a2e; color:#f0c419; border-radius:4px; padding:2px 7px; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; }
 
