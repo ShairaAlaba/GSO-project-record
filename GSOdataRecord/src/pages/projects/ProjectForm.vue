@@ -147,6 +147,10 @@
             <label>Work Description</label>
             <input v-model="loc.workDescription" type="text" placeholder="e.g. STAINLESS STEEL RAILINGS" />
           </div>
+          <div class="form-row">
+            <label>QTY Unit <span class="lbl-hint">(Unit Cost = Total Direct Cost ÷ QTY)</span></label>
+            <input v-model.number="loc.quantity" type="number" placeholder="e.g. 1" min="0" step="0.01" />
+          </div>
         </div>
 
          <!-- ── A1: Materials ─────────────────────────────── -->
@@ -280,8 +284,11 @@
             <div class="tot-value">₱{{ fmt(locDirectTotal(li)) }}</div>
           </div>
           <div class="tot-item">
-            <div class="tot-label">Unit Cost</div>
-            <div class="tot-value">₱{{ fmt(locUnitCost(li)) }}</div>
+            <div class="tot-label">Unit Cost <span class="tot-formula">(Total Direct Cost ÷ {{ loc.quantity || '?' }} unit)</span></div>
+            <div class="tot-value" :class="locUnitCost(li) > 0 ? '' : 'tot-value-zero'">
+              ₱{{ fmt(locUnitCost(li)) }}
+              <span v-if="!loc.quantity" class="tot-hint">— enter QTY above</span>
+            </div>
           </div>
         </div>
 
@@ -770,6 +777,14 @@ onMounted(() => {
 .mt-6  { margin-top:6px; }
 .mt-14 { margin-top:14px; }
 
+/* QTY Unit hint */
+.lbl-hint { font-size:9px; font-weight:400; color:#aaa; text-transform:none; letter-spacing:0; }
+
+/* Unit cost formula hint */
+.tot-formula { font-size:9px; font-weight:400; color:#aaa; text-transform:none; letter-spacing:0; display:block; margin-top:1px; }
+.tot-hint { font-size:10px; color:#e65100; font-family:inherit; font-weight:400; display:block; margin-top:2px; }
+.tot-value-zero { color:#aaa !important; }
+
 /* Buttons */
 .btn { padding:9px 20px; border:none; border-radius:5px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:opacity 0.15s,transform 0.1s; }
 .btn:hover { opacity:0.85; transform:translateY(-1px); }
@@ -780,4 +795,95 @@ onMounted(() => {
 .btn-outline { background:#fff; color:#1a1a2e; border:1.5px solid #1a1a2e; }
 .btn-sm  { padding:5px 12px; font-size:11px; }
 .btn-xs  { padding:3px 8px; font-size:11px; border-radius:3px; }
+
+/* ── PRINT STYLES ─────────────────────────────────────── */
+@media print {
+  @page { size: A4 landscape; margin: 12mm 10mm; }
+
+  /* Hide interactive / nav elements */
+  .btn, .add-loc-bar, .actions-bar,
+  AppNavbar, appnavbar, nav,
+  .prb-track, .prb-legend,
+  .progress-tracking-section,
+  .item-input[type="number"],
+  .btn-xs, .btn-sm { display: none !important; }
+
+  /* Show all inputs as plain text — override inputs */
+  input, select, textarea {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 2px 4px !important;
+    font-size: 11px !important;
+  }
+
+  body, .wrap {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .card, .loc-card {
+    box-shadow: none !important;
+    border: 1px solid #999 !important;
+    margin-bottom: 10px !important;
+    break-inside: avoid;
+  }
+
+  .section-title { background: #1a1a2e !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .loc-title-bar { background: #1a1a2e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .sub-section-bar { background: #e8f5e9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* Tables */
+  .mat-table { break-inside: avoid; font-size: 10px !important; }
+  .mat-table thead th {
+    background: #f0c419 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    font-size: 9px !important;
+  }
+  .row-even td { background: #fff !important; }
+  .row-odd  td { background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .tfoot-row td {
+    background: #1a1a2e !important;
+    color: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Totals bar — MUST print */
+  .loc-totals-bar {
+    display: flex !important;
+    background: #1a1a2e !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    break-inside: avoid;
+  }
+  .tot-item { background: #fff !important; border: 1px solid #ccc !important; }
+  .tot-grand { background: #fffbea !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .tot-label { font-size: 9px !important; color: #555 !important; }
+  .tot-value { font-size: 13px !important; }
+
+  /* Grand summary */
+  .grand-summary-grid { display: flex !important; break-inside: avoid; }
+  .gs-item { border: 1px solid #ccc !important; }
+  .gs-grand { background: #fffbea !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .gs-label { font-size: 9px !important; color: #555 !important; }
+  .gs-value { font-size: 14px !important; }
+
+  /* Progress bar header only */
+  .progress-rate-bar {
+    background: #1a1a2e !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding-bottom: 6px !important;
+  }
+
+  /* Chips */
+  .chip-total { background: #f0c419 !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .overflow-x { overflow: visible !important; }
+}
 </style>

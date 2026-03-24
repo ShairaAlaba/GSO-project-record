@@ -59,6 +59,7 @@
               <th class="col-ipow-cost">EST. MATERIAL COST</th>
               <th class="col-ipow-cost">EST. LABOR COST</th>
               <th class="col-ipow-cost">EST. PROJECT COST</th>
+              <th class="col-ipow-qty">QTY UNIT</th>
               <th class="col-ipow-cost">UNIT COST</th>
             </tr>
           </thead>
@@ -73,6 +74,7 @@
               <td class="td-mono td-right">{{ fmt(locMaterialTotal(li)) }}</td>
               <td class="td-mono td-right">{{ fmt(locOriginalLaborTotal(li)) }}</td>
               <td class="td-mono td-right td-bold">{{ fmt(locTotal(li)) }}</td>
+              <td class="td-mono td-center">{{ loc.quantity || '—' }}</td>
               <td class="td-mono td-right">{{ fmt(locUnitCost(li)) }}</td>
             </tr>
           </tbody>
@@ -82,6 +84,7 @@
               <td class="tfoot-value">{{ fmt(grandMaterialTotal) }}</td>
               <td class="tfoot-value">{{ fmt(grandLaborTotal) }}</td>
               <td class="tfoot-value">{{ fmt(grandTotal) }}</td>
+              <td></td>
               <td></td>
             </tr>
           </tfoot>
@@ -114,6 +117,8 @@
             <div class="loc-itemno-val">{{ loc.itemNo || '—' }}</div>
             <div class="loc-itemno-label">WORK DESCRIPTION</div>
             <div class="loc-itemno-desc">{{ loc.workDescription || '—' }}</div>
+            <div class="loc-itemno-label">QTY UNIT</div>
+            <div class="loc-itemno-val">{{ loc.quantity || '—' }}</div>
           </div>
         </div>
       </div>
@@ -503,6 +508,7 @@ function saveProgress() {
 .col-ipow-desc { min-width: 180px; }
 .col-ipow-qty  { width: 70px; }
 .col-ipow-unit { width: 55px; }
+.col-ipow-qty  { width: 65px; }
 .col-ipow-cost { width: 120px; }
 .loc-summary-letter { font-weight: 900; color: #1a1a2e; margin-right: 4px; }
 .loc-work-desc { font-size: 10px; color: #888; margin-top: 2px; }
